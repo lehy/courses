@@ -255,7 +255,7 @@ def SomeImagePairsDataset(labels, root, num_pairs, size=(224, 224), assemble_ima
                               label=(labels.artist[indexes[:, 0]] == labels.artist[indexes[:, 1]])))
     return ImagePairsDataset(pairs, root, size=size, assemble_images=assemble_images)
 
-    
+# could probably factor out the thing that creates a dataset of pairs from a normal dataset
 def load_painting_datasets(
         data_path='../../../data/kaggle/painter-by-numbers/',
         proportion_train=0.7, size=1000000,
@@ -314,6 +314,45 @@ def plot_dataset_image(image):
         plt.title(label)
         # plt.title('{}'.format(string_of_label(label)))
 
+def is_dataset(d):
+    return isinstance(d, chainer.dataset.DatasetMixin)
+        
+# def precompute_features(dataset, featurizer, batch_size=512):
+#     if isinstance(dataset, dict):
+#         ret = {}
+#         for k, v in six.iteritems(dataset):
+#             if is_dataset(v):
+#                 v = precompute_features(v, featurizer)
+#             ret[k] = v
+#         return ret
+
+#     assert is_dataset(dataset)
+
+#     # The below evaluates the whole dataset item by item.
+#     # It would be better to do it by batch.
+#     # def transform(x):
+#     #     ret = featurizer(x)
+#     #     return ret.data
+#     # transformed = chainer.datasets.TransformDataset(dataset, transform)
+#     # return featurizer.xp.asarray(transformed) 
+
+#     test_iter = chainer.iterators.MultiprocessIterator(
+#         dataset, batch_size=batch_size, repeat=False, shuffle=False)
+#     feature_batches = []
+#     for batch in tqdm.tqdm(test_iter, total=len(dataset)):
+#         # We get() to transfer everything to CPU. We won't be able to
+#         # keep everything on GPU anyway.
+#         args = chainer.dataset.concat_examples(batch, device=featurizer.device)
+#         if isinstance(args, tuple):
+#             f = featurizer(*args)
+#         elif isinstance(args, dict):
+#             f = featurizer(**args)
+#         else:
+#             f = featurizer(args)
+#         feature_batches.append(f.data.get())
+#     fb0 = feature_batches[0]
+#     if isinstance(fb0, tuple):
+#         return tuple(np.concatenate((x[i] for x in feature_batches)) for i in range(len(fb0)) PAS CA il faut un tableau de tuples
         
 class OnlineEvaluator(chainer.training.extensions.Evaluator):
     def __init__(self, *args, **kwargs):
@@ -525,7 +564,8 @@ def plot_logs(result_dirs, axes=None, components=['accuracy', 'loss'], name=None
                 log[measurement].interpolate(),
                 # label='{}/validation/{}'.format(name, component),
                 # label='{}/{}'.format(name, component),
-                label='_nolegend_',
+                # label='_nolegend_',
+                label='{}/{}'.format(name, component),
                 color=train_line[-1].get_color(),
                 lw=2,
                 alpha=alpha_validation)
